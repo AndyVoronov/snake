@@ -7,43 +7,93 @@
     <style>
         body {
             margin: 0;
-            overflow: hidden; /* Отключаем прокрутку */
+            overflow: hidden;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #f0f0f0;
-            touch-action: none; /* Отключаем жесты масштабирования на мобильных устройствах */
+            touch-action: none;
+        }
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         canvas {
             border: 1px solid #000;
+            background-color: #fff;
         }
-        #startButton {
-            margin-bottom: 20px;
-            padding: 10px 20px;
+        #startButton, #controlButtons {
+            margin: 10px;
+            padding: 10px;
             font-size: 16px;
+            cursor: pointer;
+        }
+        #scoreBoard {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .score {
+            font-size: 16px;
+        }
+        #controlButtons {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        .controlButton {
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+            margin: 5px;
             cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <button id="startButton">Start Game</button>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="gameContainer">
+        <div id="scoreBoard">
+            <div class="score" id="totalScore">Total Score: 0</div>
+            <div class="score" id="currentScore">Current Score: 0</div>
+            <div class="score" id="highScore">High Score: 0</div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <button id="startButton">Start Game</button>
+        <div id="controlButtons">
+            <button class="controlButton" id="up">↑</button>
+            <button class="controlButton" id="left">←</button>
+            <button class="controlButton" id="right">→</button>
+            <button class="controlButton" id="down">↓</button>
+        </div>
+    </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scale = 20;
-        const rows = canvas.height / scale;
-        const columns = canvas.width / scale;
+        const rows = Math.floor(window.innerHeight / scale);
+        const columns = Math.floor(window.innerWidth / scale);
+
+        canvas.width = columns * scale;
+        canvas.height = rows * scale;
 
         let snake;
         let fruit;
         let d;
         let gameInterval;
+        let totalScore = 0;
+        let currentScore = 0;
+        let highScore = 0;
 
         class Snake {
             constructor() {
-                this.body = [{ x: 10 * scale, y: 10 * scale }];
+                this.body = [{ x: Math.floor(columns / 2) * scale, y: Math.floor(rows / 2) * scale }];
                 this.direction = 'RIGHT';
             }
 
@@ -73,6 +123,7 @@
                 this.body.unshift(head);
                 if (head.x === fruit.x && head.y === fruit.y) {
                     createFruit();
+                    currentScore++;
                 } else {
                     this.body.pop();
                 }
@@ -115,12 +166,14 @@
             snake.move();
             snake.draw();
             drawFruit();
+            updateScore();
             checkCollision();
         }
 
         function startGame() {
             snake = new Snake();
             createFruit();
+            currentScore = 0;
             gameInterval = setInterval(gameLoop, 100);
             document.getElementById('startButton').style.display = 'none';
         }
@@ -140,11 +193,25 @@
 
         function endGame() {
             clearInterval(gameInterval);
+            totalScore += currentScore;
+            if (currentScore > highScore) highScore = currentScore;
             alert('Game Over! Press Start to play again.');
+            updateScore();
             document.getElementById('startButton').style.display = 'block';
         }
 
+        function updateScore() {
+            document.getElementById('totalScore').textContent = `Total Score: ${totalScore}`;
+            document.getElementById('currentScore').textContent = `Current Score: ${currentScore}`;
+            document.getElementById('highScore').textContent = `High Score: ${highScore}`;
+        }
+
         document.getElementById('startButton').addEventListener('click', startGame);
+
+        document.getElementById('up').addEventListener('click', () => snake.direction = 'UP');
+        document.getElementById('down').addEventListener('click', () => snake.direction = 'DOWN');
+        document.getElementById('left').addEventListener('click', () => snake.direction = 'LEFT');
+        document.getElementById('right').addEventListener('click', () => snake.direction = 'RIGHT');
 
         document.addEventListener('keydown', event => snake.changeDirection(event));
         canvas.addEventListener('touchstart', event => {
