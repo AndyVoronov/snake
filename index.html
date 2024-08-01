@@ -26,11 +26,16 @@
             border: 1px solid #000;
             background-color: #fff;
         }
-        #startButton, #controlButtons {
-            margin: 10px;
+        #startButton, .controlButton {
+            margin: 5px;
             padding: 10px;
             font-size: 16px;
             cursor: pointer;
+        }
+        #controlButtons {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
         }
         #scoreBoard {
             display: flex;
@@ -39,21 +44,16 @@
             max-width: 400px;
             padding: 10px;
             box-sizing: border-box;
+            background-color: #ddd;
+            margin-bottom: 10px;
         }
         .score {
             font-size: 16px;
-        }
-        #controlButtons {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
         }
         .controlButton {
             width: 50px;
             height: 50px;
             font-size: 18px;
-            margin: 5px;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -74,14 +74,22 @@
         </div>
     </div>
     <script>
+        // Ensure the canvas and game dimensions are set correctly
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scale = 20;
-        const rows = Math.floor(window.innerHeight / scale);
-        const columns = Math.floor(window.innerWidth / scale);
+        let rows = Math.floor(window.innerHeight / scale);
+        let columns = Math.floor(window.innerWidth / scale);
 
-        canvas.width = columns * scale;
-        canvas.height = rows * scale;
+        function resizeCanvas() {
+            rows = Math.floor(window.innerHeight / scale);
+            columns = Math.floor(window.innerWidth / scale);
+            canvas.width = columns * scale;
+            canvas.height = rows * scale;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // Initial call to set the correct size
 
         let snake;
         let fruit;
@@ -89,7 +97,7 @@
         let gameInterval;
         let totalScore = 0;
         let currentScore = 0;
-        let highScore = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
 
         class Snake {
             constructor() {
@@ -194,7 +202,10 @@
         function endGame() {
             clearInterval(gameInterval);
             totalScore += currentScore;
-            if (currentScore > highScore) highScore = currentScore;
+            if (currentScore > highScore) {
+                highScore = currentScore;
+                localStorage.setItem('highScore', highScore);
+            }
             alert('Game Over! Press Start to play again.');
             updateScore();
             document.getElementById('startButton').style.display = 'block';
@@ -220,6 +231,9 @@
             const y = event.touches[0].clientY - rect.top;
             snake.changeDirectionTouch(x, y);
         });
+
+        // Initialize scores on page load
+        updateScore();
     </script>
 </body>
 </html>
