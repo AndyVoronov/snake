@@ -8,6 +8,7 @@
         body {
             margin: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -16,9 +17,16 @@
         canvas {
             border: 1px solid #000;
         }
+        #startButton {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+    <button id="startButton">Start Game</button>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -30,10 +38,11 @@
         let snake;
         let fruit;
         let d;
+        let gameInterval;
 
         class Snake {
             constructor() {
-                this.body = [{x: 10 * scale, y: 10 * scale}];
+                this.body = [{ x: 10 * scale, y: 10 * scale }];
                 this.direction = 'RIGHT';
             }
 
@@ -75,6 +84,17 @@
                 if (key === 'ArrowLeft' && this.direction !== 'RIGHT') this.direction = 'LEFT';
                 if (key === 'ArrowRight' && this.direction !== 'LEFT') this.direction = 'RIGHT';
             }
+
+            changeDirectionTouch(x, y) {
+                const head = this.body[0];
+                if (Math.abs(x - head.x) > Math.abs(y - head.y)) {
+                    if (x < head.x) this.direction = 'LEFT';
+                    else if (x > head.x) this.direction = 'RIGHT';
+                } else {
+                    if (y < head.y) this.direction = 'UP';
+                    else if (y > head.y) this.direction = 'DOWN';
+                }
+            }
         }
 
         function createFruit() {
@@ -95,28 +115,43 @@
             snake.draw();
             drawFruit();
             checkCollision();
-            setTimeout(gameLoop, 100);
+        }
+
+        function startGame() {
+            snake = new Snake();
+            createFruit();
+            gameInterval = setInterval(gameLoop, 100);
+            document.getElementById('startButton').style.display = 'none';
         }
 
         function checkCollision() {
             const head = snake.body[0];
             if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-                alert('Game Over!');
-                document.location.reload();
+                endGame();
             }
 
             for (let i = 1; i < snake.body.length; i++) {
                 if (head.x === snake.body[i].x && head.y === snake.body[i].y) {
-                    alert('Game Over!');
-                    document.location.reload();
+                    endGame();
                 }
             }
         }
 
-        snake = new Snake();
-        createFruit();
+        function endGame() {
+            clearInterval(gameInterval);
+            alert('Game Over! Press Start to play again.');
+            document.getElementById('startButton').style.display = 'block';
+        }
+
+        document.getElementById('startButton').addEventListener('click', startGame);
+
         document.addEventListener('keydown', event => snake.changeDirection(event));
-        gameLoop();
+        canvas.addEventListener('touchstart', event => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.touches[0].clientX - rect.left;
+            const y = event.touches[0].clientY - rect.top;
+            snake.changeDirectionTouch(x, y);
+        });
     </script>
 </body>
 </html>
