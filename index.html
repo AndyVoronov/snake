@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scale = 20;
+        const rows = canvas.height / scale;
+        const columns = canvas.width / scale;
+
+        let snake;
+        let fruit;
+        let d;
+
+        class Snake {
+            constructor() {
+                this.body = [{x: 10 * scale, y: 10 * scale}];
+                this.direction = 'RIGHT';
+            }
+
+            draw() {
+                ctx.fillStyle = 'green';
+                this.body.forEach(segment => {
+                    ctx.fillRect(segment.x, segment.y, scale, scale);
+                });
+            }
+
+            move() {
+                const head = { ...this.body[0] };
+                switch (this.direction) {
+                    case 'UP':
+                        head.y -= scale;
+                        break;
+                    case 'DOWN':
+                        head.y += scale;
+                        break;
+                    case 'LEFT':
+                        head.x -= scale;
+                        break;
+                    case 'RIGHT':
+                        head.x += scale;
+                        break;
+                }
+                this.body.unshift(head);
+                if (head.x === fruit.x && head.y === fruit.y) {
+                    createFruit();
+                } else {
+                    this.body.pop();
+                }
+            }
+
+            changeDirection(event) {
+                const key = event.key;
+                if (key === 'ArrowUp' && this.direction !== 'DOWN') this.direction = 'UP';
+                if (key === 'ArrowDown' && this.direction !== 'UP') this.direction = 'DOWN';
+                if (key === 'ArrowLeft' && this.direction !== 'RIGHT') this.direction = 'LEFT';
+                if (key === 'ArrowRight' && this.direction !== 'LEFT') this.direction = 'RIGHT';
+            }
+        }
+
+        function createFruit() {
+            fruit = {
+                x: Math.floor(Math.random() * columns) * scale,
+                y: Math.floor(Math.random() * rows) * scale
+            };
+        }
+
+        function drawFruit() {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(fruit.x, fruit.y, scale, scale);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            snake.move();
+            snake.draw();
+            drawFruit();
+            checkCollision();
+            setTimeout(gameLoop, 100);
+        }
+
+        function checkCollision() {
+            const head = snake.body[0];
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                alert('Game Over!');
+                document.location.reload();
+            }
+
+            for (let i = 1; i < snake.body.length; i++) {
+                if (head.x === snake.body[i].x && head.y === snake.body[i].y) {
+                    alert('Game Over!');
+                    document.location.reload();
+                }
+            }
+        }
+
+        snake = new Snake();
+        createFruit();
+        document.addEventListener('keydown', event => snake.changeDirection(event));
+        gameLoop();
+    </script>
+</body>
+</html>
